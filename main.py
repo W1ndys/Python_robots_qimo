@@ -1,6 +1,7 @@
 import requests
 import re
 import openpyxl
+from openpyxl.worksheet.worksheet import Worksheet
 import os
 
 
@@ -24,6 +25,15 @@ def init_excel():
     # 保存Excel文件
     workbook.save("中药信息.xlsx")
     print("中药信息.xlsx文件初始化完成")
+
+
+# 添加内容到Excel
+def add_content_to_excel(content):
+    """添加内容到Excel"""
+    workbook = openpyxl.load_workbook("中药信息.xlsx")
+    sheet = workbook["中药信息"]  # 直接通过sheet名称获取
+    sheet.append(content)
+    workbook.save("中药信息.xlsx")
 
 
 def fetch_webpage(url):
@@ -63,7 +73,7 @@ def print_medicine_info(matches):
 def get_medicine_id_map():
     """获取药品和id映射"""
     url = "https://www.zhiyuanzhongyi.com/traditional"
-    # 获取网页内容
+    # 获取内容
     content = fetch_webpage(url)
     # 提取药品信息
     matches = extract_medicine_info(content)
@@ -80,7 +90,6 @@ def process_medicine_info(ids, medicine_names):
         url = base_url + id
         print(f"开始处理药品信息：{medicine_name}")
         response = fetch_webpage(url)
-
         # 提取药品名称
         pattern = re.compile(r'<div class="right_msg" data-v-0bab2978>(.*?)</div>')
         medicine_name = pattern.search(response)
