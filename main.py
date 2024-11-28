@@ -7,9 +7,7 @@ import os
 
 # 初始化Excel
 def init_excel():
-    """初始化Excel，创建一个名为'中药信息'的Excel文件，并创建一个名为'中药信息'的Sheet
-    第一行写入药名，史载于，别名，性味归经，药材简介，用法用量，注意事项
-    """
+    """初始化Excel，创建一个名为'中药信息'的Excel文件"""
     # 检测是否存在中药信息.xlsx文件，存在则跳过
     if os.path.exists("中药信息.xlsx"):
         print("中药信息.xlsx文件已存在，跳过初始化")
@@ -24,12 +22,20 @@ def init_excel():
 
 
 # 添加内容到Excel
-def add_content_to_excel(content):
-    """添加内容到Excel"""
+def add_content_to_excel(info_dict):
+    """根据字典内容添加到Excel"""
     workbook = openpyxl.load_workbook("中药信息.xlsx")
     sheet = workbook["中药信息"]  # 直接通过sheet名称获取
-    sheet.append(content)
+
+    # 如果是第一次写入，添加表头
+    if sheet.max_row == 1:
+        sheet.append(list(info_dict.keys()))
+
+    # 添加字典的值
+    sheet.append(list(info_dict.values()))
+    # 保存Excel文件
     workbook.save("中药信息.xlsx")
+    print(f"添加药品信息：{info_dict}到Excel完成")
 
 
 def fetch_webpage(url):
@@ -108,7 +114,7 @@ def process_medicine_info(ids, medicine_names):
             info_dict = dict(zip(matches_info_name, matches_info_data))
             print(f"处理药品信息：{medicine_name}，id：{id}完成")
             print(info_dict)
-            return info_dict
+            add_content_to_excel(info_dict)
 
 
 if __name__ == "__main__":
