@@ -7,18 +7,28 @@ import html
 
 # 初始化Excel
 def init_excel():
-    """初始化Excel，创建一个名为'常用中药'的Excel文件"""
-    # 检测是否存在常用中药.xlsx文件，存在则跳过
-    if os.path.exists("常用中药.xlsx"):
-        print("常用中药.xlsx文件已存在，跳过初始化")
-        return
-    # 创建一个名为'常用中药'的Excel文件
-    workbook = openpyxl.Workbook()
-    # 创建一个名为'常用中药'的Sheet
-    workbook.create_sheet("常用中药", 0)
-    # 保存Excel文件
-    workbook.save("常用中药.xlsx")
-    print("常用中药.xlsx文件初始化完成")
+    """初始化Excel，创建多个名为'常用中药'、'经典方剂'、'中成药'和'药膳'的Excel文件"""
+
+    # 定义要创建的文件和对应的Sheet名称
+    files_and_sheets = {
+        "常用中药.xlsx": "常用中药",
+        "经典方剂.xlsx": "经典方剂",
+        "中成药.xlsx": "中成药",
+        "药膳.xlsx": "药膳",
+    }
+
+    for filename, sheet_name in files_and_sheets.items():
+        # 检测是否存在文件，存在则跳过
+        if os.path.exists(filename):
+            print(f"{filename}文件已存在，跳过初始化")
+            continue
+        # 创建一个新的Excel文件
+        workbook = openpyxl.Workbook()
+        # 创建一个新的Sheet
+        workbook.create_sheet(sheet_name, 0)
+        # 保存Excel文件
+        workbook.save(filename)
+        print(f"{filename}文件初始化完成")
 
 
 # 添加内容到Excel
