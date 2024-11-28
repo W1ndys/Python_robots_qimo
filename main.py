@@ -75,6 +75,7 @@ def get_medicine_id_map():
     matches = extract_medicine_info(content)
     # 获取分离的ID和药名列表
     ids, medicine_names = process_matches(matches)
+    print(f"获取药品ID和名称映射完成，共获取到{len(ids)}个药品")
     return ids, medicine_names
 
 
@@ -86,13 +87,28 @@ def process_medicine_info(ids, medicine_names):
         url = base_url + id
         print(f"开始处理药品信息：{medicine_name}，id：{id}")
         response = fetch_webpage(url)
-        # 提取药品名称
-        pattern = re.compile(r'<div class="right_msg" data-v-0bab2978>(.*?)</div>')
-        matches = pattern.findall(response.replace("\n", ""))
-        if matches:
-            print(
-                f"，药品名称：{medicine_name}，始载于：{matches[0]}，别名：{matches[1]}，性味归经：{matches[2]}，功效：{matches[3]}，药材简介：{matches[4]}，注意事项：{matches[5]}"
-            )
+
+        # 去除换行符
+        response = response.replace("\n", "")
+
+        # 提取药品所有属性名称存成列表
+        pattern_info_name = re.compile(
+            r'<div class="left_title" data-v-0bab2978>(.*?)</div>'
+        )
+
+        # 提取属性对应的数据存成列表
+        pattern_info_data = re.compile(
+            r'<div class="right_msg" data-v-0bab2978>(.*?)</div>'
+        )
+
+        matches_info_name = pattern_info_name.findall(response)
+        matches_info_data = pattern_info_data.findall(response)
+        if matches_info_name and matches_info_data:
+            # 拼成字典
+            info_dict = dict(zip(matches_info_name, matches_info_data))
+            print(f"处理药品信息：{medicine_name}，id：{id}完成")
+            print(info_dict)
+            return info_dict
 
 
 if __name__ == "__main__":
@@ -102,7 +118,6 @@ if __name__ == "__main__":
     init_excel()
     print("-" * 50)
     ids, medicine_names = get_medicine_id_map()
-    print(f"获取药品ID和名称映射完成，共获取到{len(ids)}个药品")
     print("-" * 50)
     process_medicine_info(ids, medicine_names)
     print("-" * 50)
