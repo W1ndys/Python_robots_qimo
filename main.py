@@ -1,31 +1,31 @@
 import requests
 import re
 import openpyxl
-from openpyxl.worksheet.worksheet import Worksheet
 import os
+import html
 
 
 # 初始化Excel
 def init_excel():
-    """初始化Excel，创建一个名为'中药信息'的Excel文件"""
-    # 检测是否存在中药信息.xlsx文件，存在则跳过
-    if os.path.exists("中药信息.xlsx"):
-        print("中药信息.xlsx文件已存在，跳过初始化")
+    """初始化Excel，创建一个名为'常用中药'的Excel文件"""
+    # 检测是否存在常用中药.xlsx文件，存在则跳过
+    if os.path.exists("常用中药.xlsx"):
+        print("常用中药.xlsx文件已存在，跳过初始化")
         return
-    # 创建一个名为'中药信息'的Excel文件
+    # 创建一个名为'常用中药'的Excel文件
     workbook = openpyxl.Workbook()
-    # 创建一个名为'中药信息'的Sheet
-    sheet = workbook.create_sheet("中药信息", 0)
+    # 创建一个名为'常用中药'的Sheet
+    workbook.create_sheet("常用中药", 0)
     # 保存Excel文件
-    workbook.save("中药信息.xlsx")
-    print("中药信息.xlsx文件初始化完成")
+    workbook.save("常用中药.xlsx")
+    print("常用中药.xlsx文件初始化完成")
 
 
 # 添加内容到Excel
 def add_content_to_excel(info_dict):
     """根据字典内容添加到Excel"""
-    workbook = openpyxl.load_workbook("中药信息.xlsx")
-    sheet = workbook["中药信息"]  # 直接通过sheet名称获取
+    workbook = openpyxl.load_workbook("常用中药.xlsx")
+    sheet = workbook["常用中药"]  # 直接通过sheet名称获取
 
     # 如果是第一次写入，添加表头
     if sheet.max_row == 1:
@@ -34,8 +34,9 @@ def add_content_to_excel(info_dict):
     # 添加字典的值
     sheet.append(list(info_dict.values()))
     # 保存Excel文件
-    workbook.save("中药信息.xlsx")
-    print(f"添加药品信息：{info_dict}到Excel完成")
+    workbook.save("常用中药.xlsx")
+    print(f"添加药品信息到Excel完成")
+    print("-" * 50)
 
 
 def fetch_webpage(url):
@@ -89,9 +90,12 @@ def process_medicine_info(ids, medicine_names):
     """处理药品信息"""
     base_url = "https://www.zhiyuanzhongyi.com/traditionaldetails?id="
     print("开始处理药品信息")
-    for id, medicine_name in zip(ids, medicine_names):
+    total = len(ids)  # 获取总数
+    for index, (id, medicine_name) in enumerate(zip(ids, medicine_names), start=1):
         url = base_url + id
-        print(f"开始处理药品信息：{medicine_name}，id：{id}")
+        print(
+            f"({index}/{total} ({(index/total)*100:.2f}%))开始处理药品信息：{medicine_name}，id：{id}"
+        )
         response = fetch_webpage(url)
 
         # 去除换行符
@@ -112,9 +116,33 @@ def process_medicine_info(ids, medicine_names):
         if matches_info_name and matches_info_data:
             # 拼成字典
             info_dict = dict(zip(matches_info_name, matches_info_data))
-            print(f"处理药品信息：{medicine_name}，id：{id}完成")
-            print(info_dict)
+            print(f"提取药品信息：{medicine_name}，id：{id}完成")
+            # 去掉HTML标签
+            info_dict = remove_html_tags(info_dict)
+            print(f"去除HTML标签完成")
+            # 去掉中括号的拼音
+            info_dict = remove_pinyin(info_dict)
+            print(f"去掉中括号的拼音完成")
+            # 添加到Excel
             add_content_to_excel(info_dict)
+
+
+def remove_html_tags(info_dict):
+    """去除字典值中的HTML标签"""
+    pattern = re.compile(r"<[^>]+>")
+    return {k: pattern.sub("", v) for k, v in info_dict.items()}
+
+
+def remove_pinyin(info_dict):
+    """去掉中括号的拼音"""
+    pattern = re.compile(r"\[.*?\]")
+    return {k: pattern.sub("", v) for k, v in info_dict.items()}
+
+
+# 恢复HTML转义
+def restore_html_escape(info_dict):
+    """恢复HTML转义"""
+    return {k: html.unescape(v) for k, v in info_dict.items()}
 
 
 if __name__ == "__main__":
