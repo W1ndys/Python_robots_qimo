@@ -18,10 +18,6 @@ def init_excel():
     workbook = openpyxl.Workbook()
     # 创建一个名为'中药信息'的Sheet
     sheet = workbook.create_sheet("中药信息", 0)
-    # 第一行写入药名，史载于，别名，性味归经，药材简介，用法用量，注意事项
-    sheet.append(
-        ["药名", "史载于", "别名", "性味归经", "药材简介", "用法用量", "注意事项"]
-    )
     # 保存Excel文件
     workbook.save("中药信息.xlsx")
     print("中药信息.xlsx文件初始化完成")
@@ -88,13 +84,15 @@ def process_medicine_info(ids, medicine_names):
     print("开始处理药品信息")
     for id, medicine_name in zip(ids, medicine_names):
         url = base_url + id
-        print(f"开始处理药品信息：{medicine_name}")
+        print(f"开始处理药品信息：{medicine_name}，id：{id}")
         response = fetch_webpage(url)
         # 提取药品名称
         pattern = re.compile(r'<div class="right_msg" data-v-0bab2978>(.*?)</div>')
-        medicine_name = pattern.search(response)
-        if medicine_name:
-            medicine_name = medicine_name.group(1)
+        matches = pattern.findall(response.replace("\n", ""))
+        if matches:
+            print(
+                f"，药品名称：{medicine_name}，始载于：{matches[0]}，别名：{matches[1]}，性味归经：{matches[2]}，功效：{matches[3]}，药材简介：{matches[4]}，注意事项：{matches[5]}"
+            )
 
 
 if __name__ == "__main__":
