@@ -164,14 +164,14 @@ def get_prescription_id_map():
 
 
 def process_common_medicine_info(ids, medicine_names):
-    """处理药品信息"""
+    """处理常用中药信息"""
     base_url = "https://www.zhiyuanzhongyi.com/traditionaldetails?id="
-    print("开始处理药品信息")
+    print("开始处理常用中药信息")
     total = len(ids)  # 获取总数
     for index, (id, medicine_name) in enumerate(zip(ids, medicine_names), start=1):
         url = base_url + id
         print(
-            f"({index}/{total} ({(index/total)*100:.2f}%))开始处理药品信息：{medicine_name}，id：{id}"
+            f"({index}/{total} ({(index/total)*100:.2f}%))开始处理常用中药信息：{medicine_name}，id：{id}"
         )
         response = fetch_webpage(url)
 
@@ -193,7 +193,7 @@ def process_common_medicine_info(ids, medicine_names):
         if matches_info_name and matches_info_data:
             # 拼成字典
             info_dict = dict(zip(matches_info_name, matches_info_data))
-            print(f"提取药品信息：{medicine_name}，id：{id}完成")
+            print(f"提取常用中药信息：{medicine_name}，id：{id}完成")
             # 去掉HTML标签
             info_dict = remove_html_tags(info_dict)
             print(f"去除HTML标签完成")
