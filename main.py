@@ -5,6 +5,24 @@ import os
 import html
 
 
+def remove_html_tags(info_dict):
+    """去除字典值中的HTML标签"""
+    pattern = re.compile(r"<[^>]+>")
+    return {k: pattern.sub("", v) for k, v in info_dict.items()}
+
+
+def remove_pinyin(info_dict):
+    """去掉中括号的拼音"""
+    pattern = re.compile(r"\[.*?\]")
+    return {k: pattern.sub("", v) for k, v in info_dict.items()}
+
+
+# 恢复HTML转义
+def restore_html_escape(info_dict):
+    """恢复HTML转义"""
+    return {k: html.unescape(v) for k, v in info_dict.items()}
+
+
 # 初始化Excel
 def init_excel():
     """初始化Excel，创建多个名为'常用中药'、'经典方剂'、'中成药'和'药膳'的Excel文件"""
@@ -63,7 +81,7 @@ def add_content_to_prescription_excel(info_dict):
     sheet.append(list(info_dict.values()))
     # 保存Excel文件
     workbook.save("经典方剂.xlsx")
-    print(f"添加方剂信息到Excel完成")
+    print(f"添加经典方剂信息到Excel完成")
     print("-" * 50)
 
 
@@ -116,10 +134,37 @@ def save_response(content, filename="response.html"):
         f.write(content)
 
 
-def extract_medicine_info(text_content):
-    """提取药品ID和名称"""
+# 提取常用中药ID和名称
+def extract_common_medicine_info(text_content):
+    """提取常用中药ID和名称"""
     pattern = re.compile(
         r'<a href="/traditionaldetails\?id=(\d+)" target="_blank" data-v-bce4c468>(.*?)</a>'
+    )
+    return pattern.findall(text_content.replace("\n", ""))
+
+
+# 提取经典方剂ID和名称
+def extract_prescription_info(text_content):
+    """提取经典方剂ID和名称"""
+    pattern = re.compile(
+        r'<a href="/prescriptiondetails\?id=(\d+)" target="_blank" data-v-612dcc6e class>(.*?)</a>'
+    )
+    return pattern.findall(text_content.replace("\n", ""))
+
+
+def extract_chinese_medicine_info(text_content):
+    """提取中成药ID和名称"""
+    pattern = re.compile(
+        r'<a href="/chinesemedicinedetails\?id=(\d+)"[^>]*><div class="out_box"[^>]*><div class="in_box"[^>]*>(.*?)<img'
+    )
+    return pattern.findall(text_content.replace("\n", ""))
+
+
+# 提取药膳ID和名称
+def extract_diet_info(text_content):
+    """提取药膳ID和名称"""
+    pattern = re.compile(
+        r'<a href="/tonicdietdetails\?id=(\d+)"[^>]*><div class="out_box"[^>]*><div class="in_box"[^>]*>(.*?)<img'
     )
     return pattern.findall(text_content.replace("\n", ""))
 
@@ -137,32 +182,56 @@ def print_medicine_info(matches):
         print(f"ID: {id_num}, 药名: {medicine_name.strip()}")
 
 
+# 获取常用中药ID和名称映射
 def get_common_medicine_id_map():
     """获取常用中药ID和名称映射"""
     url = "https://www.zhiyuanzhongyi.com/traditional"
     # 获取内容
     content = fetch_webpage(url)
     # 提取药品信息
-    matches = extract_medicine_info(content)
+    matches = extract_common_medicine_info(content)
     # 获取分离的ID和药名列表
     ids, medicine_names = process_matches(matches)
     print(f"获取常用中药ID和名称映射完成，共获取到{len(ids)}个")
     return ids, medicine_names
 
 
-# 获取方剂ID和名称映射
+# 获取经典方剂ID和名称映射
 def get_prescription_id_map():
     url = "https://www.zhiyuanzhongyi.com/prescription"
     # 获取内容
     content = fetch_webpage(url)
     # 提取药品信息
-    matches = extract_medicine_info(content)
+    matches = extract_prescription_info(content)
     # 获取分离的ID和药名列表
     ids, medicine_names = process_matches(matches)
-    print(f"获取方剂ID和名称映射完成，共获取到{len(ids)}个方剂")
+    print(f"获取经典方剂ID和名称映射完成，共获取到{len(ids)}个经典方剂")
     return ids, medicine_names
 
 
+# 获取药膳ID和名称映射
+def get_diet_id_map():
+    """获取药膳ID和名称映射"""
+    url = "https://www.zhiyuanzhongyi.com/tonicdiet"
+    content = fetch_webpage(url)
+    matches = extract_diet_info(content)
+    ids, medicine_names = process_matches(matches)
+    print(f"获取药膳ID和名称映射完成，共获取到{len(ids)}个药膳")
+    return ids, medicine_names
+
+
+# 获取中成药ID和名称映射
+def get_chinese_medicine_id_map():
+    """获取中成药ID和名称映射"""
+    url = "https://www.zhiyuanzhongyi.com/pharmacy"
+    content = fetch_webpage(url)
+    matches = extract_chinese_medicine_info(content)
+    ids, medicine_names = process_matches(matches)
+    print(f"获取中成药ID和名称映射完成，共获取到{len(ids)}个中成药")
+    return ids, medicine_names
+
+
+# 处理常用中药信息
 def process_common_medicine_info(ids, medicine_names):
     """处理常用中药信息"""
     base_url = "https://www.zhiyuanzhongyi.com/traditionaldetails?id="
@@ -204,22 +273,22 @@ def process_common_medicine_info(ids, medicine_names):
             add_content_to_common_medicine_excel(info_dict)
 
 
-# 处理方剂信息
+# 处理经典方剂信息
 def process_prescription_info(ids, medicine_names):
     base_url = "https://www.zhiyuanzhongyi.com/prescriptiondetails?id="
-    print("开始处理方剂信息")
+    print("开始处理经典方剂信息")
     total = len(ids)  # 获取总数
     for index, (id, medicine_name) in enumerate(zip(ids, medicine_names), start=1):
         url = base_url + id
         print(
-            f"({index}/{total} ({(index/total)*100:.2f}%))开始处理方剂信息：{medicine_name}，id：{id}"
+            f"({index}/{total} ({(index/total)*100:.2f}%))开始处理经典方剂信息：{medicine_name}，id：{id}"
         )
         response = fetch_webpage(url)
 
         # 去除换行符
         response = response.replace("\n", "")
 
-        # 提取方剂所有属性名称存成列表
+        # 提取经典方剂所有属性名称存成列表
         pattern_info_name = re.compile(
             r'<div class="left_title" data-v-0bab2978>(.*?)</div>'
         )
@@ -234,7 +303,7 @@ def process_prescription_info(ids, medicine_names):
         if matches_info_name and matches_info_data:
             # 拼成字典
             info_dict = dict(zip(matches_info_name, matches_info_data))
-            print(f"提取方剂信息：{medicine_name}，id：{id}完成")
+            print(f"提取经典方剂信息：{medicine_name}，id：{id}完成")
             # 去掉HTML标签
             info_dict = remove_html_tags(info_dict)
             print(f"去除HTML标签完成")
@@ -245,74 +314,49 @@ def process_prescription_info(ids, medicine_names):
             add_content_to_prescription_excel(info_dict)
 
 
-def remove_html_tags(info_dict):
-    """去除字典值中的HTML标签"""
-    pattern = re.compile(r"<[^>]+>")
-    return {k: pattern.sub("", v) for k, v in info_dict.items()}
-
-
-def remove_pinyin(info_dict):
-    """去掉中括号的拼音"""
-    pattern = re.compile(r"\[.*?\]")
-    return {k: pattern.sub("", v) for k, v in info_dict.items()}
-
-
-# 恢复HTML转义
-def restore_html_escape(info_dict):
-    """恢复HTML转义"""
-    return {k: html.unescape(v) for k, v in info_dict.items()}
-
-
-def get_medicine_id_map():
-    """获取中成药ID和名称映射"""
-    url = "https://www.zhiyuanzhongyi.com/pharmacy"
-    content = fetch_webpage(url)
-    matches = extract_medicine_info(content)
-    ids, medicine_names = process_matches(matches)
-    print(f"获取中成药ID和名称映射完成，共获取到{len(ids)}个中成药")
-    return ids, medicine_names
-
-
-def process_medicine_info(ids, medicine_names):
+# 处理中成药信息
+def process_chinese_medicine_info(ids, medicine_names):
     """处理中成药信息"""
     base_url = "https://www.zhiyuanzhongyi.com/chinesemedicinedetails?id="
     print("开始处理中成药信息")
-    total = len(ids)
+    total = len(ids)  # 获取总数
     for index, (id, medicine_name) in enumerate(zip(ids, medicine_names), start=1):
         url = base_url + id
         print(
             f"({index}/{total} ({(index/total)*100:.2f}%))开始处理中成药信息：{medicine_name}，id：{id}"
         )
         response = fetch_webpage(url)
+
+        # 去除换行符
         response = response.replace("\n", "")
+
+        # 提取经典方剂所有属性名称存成列表
         pattern_info_name = re.compile(
             r'<div class="left_title" data-v-0bab2978>(.*?)</div>'
         )
+
+        # 提取属性对应的数据存成列表
         pattern_info_data = re.compile(
             r'<div class="right_msg" data-v-0bab2978>(.*?)</div>'
         )
+
         matches_info_name = pattern_info_name.findall(response)
         matches_info_data = pattern_info_data.findall(response)
         if matches_info_name and matches_info_data:
+            # 拼成字典
             info_dict = dict(zip(matches_info_name, matches_info_data))
             print(f"提取中成药信息：{medicine_name}，id：{id}完成")
+            # 去掉HTML标签
             info_dict = remove_html_tags(info_dict)
             print(f"去除HTML标签完成")
+            # 去掉中括号的拼音
             info_dict = remove_pinyin(info_dict)
             print(f"去掉中括号的拼音完成")
-            add_content_to_medicine_excel(info_dict)
+            # 添加到Excel
+            add_content_to_prescription_excel(info_dict)
 
 
-def get_diet_id_map():
-    """获取药膳ID和名称映射"""
-    url = "https://www.zhiyuanzhongyi.com/tonicdiet"
-    content = fetch_webpage(url)
-    matches = extract_medicine_info(content)
-    ids, medicine_names = process_matches(matches)
-    print(f"获取药膳ID和名称映射完成，共获取到{len(ids)}个药膳")
-    return ids, medicine_names
-
-
+# 处理药膳信息
 def process_diet_info(ids, medicine_names):
     """处理药膳信息"""
     base_url = "https://www.zhiyuanzhongyi.com/tonicdietdetails?id="
@@ -366,9 +410,9 @@ if __name__ == "__main__":
 
     # 处理中成药
     print("-" * 20 + "中成药" + "-" * 20)
-    ids, medicine_names = get_medicine_id_map()
+    ids, medicine_names = get_chinese_medicine_id_map()
     print("-" * 50)
-    process_medicine_info(ids, medicine_names)
+    process_chinese_medicine_info(ids, medicine_names)
     print("-" * 50)
 
     # 处理药膳
