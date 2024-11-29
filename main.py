@@ -369,7 +369,7 @@ def process_chinese_medicine_info(ids, medicine_names):
             info_dict = remove_pinyin(info_dict)
             print(f"去掉中括号的拼音完成")
             # 添加到Excel
-            add_content_to_prescription_excel(info_dict)
+            add_content_to_medicine_excel(info_dict)
 
 
 # 处理药膳信息
@@ -403,6 +403,42 @@ def process_diet_info(ids, medicine_names):
             add_content_to_diet_excel(info_dict)
 
 
+def process_common_medicine():
+    """处理常用中药"""
+    print("-" * 20 + "常用中药" + "-" * 20)
+    ids, medicine_names = get_common_medicine_id_map()
+    print("-" * 50)
+    process_common_medicine_info(ids, medicine_names)
+    print("-" * 50)
+
+
+def process_prescription():
+    """处理经典方剂"""
+    print("-" * 20 + "经典方剂" + "-" * 20)
+    ids, medicine_names = get_prescription_id_map()
+    print("-" * 50)
+    process_prescription_info(ids, medicine_names)
+    print("-" * 50)
+
+
+def process_chinese_medicine():
+    """处理中成药"""
+    print("-" * 20 + "中成药" + "-" * 20)
+    ids, medicine_names = get_chinese_medicine_id_map()
+    print("-" * 50)
+    process_chinese_medicine_info(ids, medicine_names)
+    print("-" * 50)
+
+
+def process_diet():
+    """处理药膳"""
+    print("-" * 20 + "药膳" + "-" * 20)
+    ids, medicine_names = get_diet_id_map()
+    print("-" * 50)
+    process_diet_info(ids, medicine_names)
+    print("-" * 50)
+
+
 if __name__ == "__main__":
     print("-" * 50)
     print("开始执行，Writed by W1ndys，https://github.com/W1ndys")
@@ -410,30 +446,7 @@ if __name__ == "__main__":
     init_excel()
     print("-" * 50)
 
-    # 处理常用中药
-    # print("-" * 20 + "常用中药" + "-" * 20)
-    # ids, medicine_names = get_common_medicine_id_map()
-    # print("-" * 50)
-    # process_common_medicine_info(ids, medicine_names)
-    # print("-" * 50)
-
-    # 处理经典方剂
-    print("-" * 20 + "经典方剂" + "-" * 20)
-    ids, medicine_names = get_prescription_id_map()
-    print("-" * 50)
-    process_prescription_info(ids, medicine_names)
-    print("-" * 50)
-
-    # 处理中成药
-    print("-" * 20 + "中成药" + "-" * 20)
-    ids, medicine_names = get_chinese_medicine_id_map()
-    print("-" * 50)
-    process_chinese_medicine_info(ids, medicine_names)
-    print("-" * 50)
-
-    # 处理药膳
-    print("-" * 20 + "药膳" + "-" * 20)
-    ids, medicine_names = get_diet_id_map()
-    print("-" * 50)
-    process_diet_info(ids, medicine_names)
-    print("-" * 50)
+    process_common_medicine()
+    process_prescription()
+    process_chinese_medicine()
+    process_diet()
