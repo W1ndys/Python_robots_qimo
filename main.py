@@ -411,11 +411,11 @@ if __name__ == "__main__":
     print("-" * 50)
 
     # 处理常用中药
-    print("-" * 20 + "常用中药" + "-" * 20)
-    ids, medicine_names = get_common_medicine_id_map()
-    print("-" * 50)
-    process_common_medicine_info(ids, medicine_names)
-    print("-" * 50)
+    # print("-" * 20 + "常用中药" + "-" * 20)
+    # ids, medicine_names = get_common_medicine_id_map()
+    # print("-" * 50)
+    # process_common_medicine_info(ids, medicine_names)
+    # print("-" * 50)
 
     # 处理经典方剂
     print("-" * 20 + "经典方剂" + "-" * 20)
