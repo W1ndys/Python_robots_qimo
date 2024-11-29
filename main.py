@@ -147,15 +147,16 @@ def extract_common_medicine_info(text_content):
 def extract_prescription_info(text_content):
     """提取经典方剂ID和名称"""
     pattern = re.compile(
-        r'<a href="/prescriptiondetails\?id=(\d+)" target="_blank" data-v-612dcc6e class>(.*?)</a>'
+        r'<a href="/prescriptiondetails\?id=(\d+)" target="_blank" data-v-612dcc6e>(.*?)</a>'
     )
     return pattern.findall(text_content.replace("\n", ""))
 
 
+# 提取中成药ID和名称
 def extract_chinese_medicine_info(text_content):
     """提取中成药ID和名称"""
     pattern = re.compile(
-        r'<a href="/chinesemedicinedetails\?id=(\d+)"[^>]*><div class="out_box"[^>]*><div class="in_box"[^>]*>(.*?)<img'
+        r'<div title="(.*?)" class="pharmacy_item"[^>]*><a href="/chinesemedicinedetails\?id=(\d+)"[^>]*>.*?<div class="in_box"[^>]*>.*?</div>'
     )
     return pattern.findall(text_content.replace("\n", ""))
 
@@ -164,15 +165,24 @@ def extract_chinese_medicine_info(text_content):
 def extract_diet_info(text_content):
     """提取药膳ID和名称"""
     pattern = re.compile(
-        r'<a href="/tonicdietdetails\?id=(\d+)"[^>]*><div class="out_box"[^>]*><div class="in_box"[^>]*>(.*?)<img'
+        r'<div title=".*?" class="prescriptionsLists_item"[^>]*><a href="/tonicdietdetails\?id=(\d+)"[^>]*><div class="out_box"[^>]*><div class="in_box"[^>]*>.*?<img[^>]*>(.*?)<img'
     )
     return pattern.findall(text_content.replace("\n", ""))
 
 
-def process_matches(matches):
-    """处理匹配结果并返回分离的ID和药名列表"""
+# 处理常用中药和经典方剂和药膳的ID和名称
+def process_common_medicine_and_prescription_and_diet_id_name(matches):
+    """处理常用中药和经典方剂和药膳的ID和名称"""
     ids = [match[0].strip() for match in matches]
     medicine_names = [match[1].strip() for match in matches]
+    return ids, medicine_names
+
+
+# 处理中成药的ID和名称
+def process_chinese_medicine_id_name(matches):
+    """处理中成药的ID和名称"""
+    medicine_names = [match[0].strip() for match in matches]
+    ids = [match[1].strip() for match in matches]
     return ids, medicine_names
 
 
@@ -191,7 +201,9 @@ def get_common_medicine_id_map():
     # 提取药品信息
     matches = extract_common_medicine_info(content)
     # 获取分离的ID和药名列表
-    ids, medicine_names = process_matches(matches)
+    ids, medicine_names = process_common_medicine_and_prescription_and_diet_id_name(
+        matches
+    )
     print(f"获取常用中药ID和名称映射完成，共获取到{len(ids)}个")
     return ids, medicine_names
 
@@ -204,19 +216,10 @@ def get_prescription_id_map():
     # 提取药品信息
     matches = extract_prescription_info(content)
     # 获取分离的ID和药名列表
-    ids, medicine_names = process_matches(matches)
+    ids, medicine_names = process_common_medicine_and_prescription_and_diet_id_name(
+        matches
+    )
     print(f"获取经典方剂ID和名称映射完成，共获取到{len(ids)}个经典方剂")
-    return ids, medicine_names
-
-
-# 获取药膳ID和名称映射
-def get_diet_id_map():
-    """获取药膳ID和名称映射"""
-    url = "https://www.zhiyuanzhongyi.com/tonicdiet"
-    content = fetch_webpage(url)
-    matches = extract_diet_info(content)
-    ids, medicine_names = process_matches(matches)
-    print(f"获取药膳ID和名称映射完成，共获取到{len(ids)}个药膳")
     return ids, medicine_names
 
 
@@ -226,8 +229,21 @@ def get_chinese_medicine_id_map():
     url = "https://www.zhiyuanzhongyi.com/pharmacy"
     content = fetch_webpage(url)
     matches = extract_chinese_medicine_info(content)
-    ids, medicine_names = process_matches(matches)
+    ids, medicine_names = process_chinese_medicine_id_name(matches)
     print(f"获取中成药ID和名称映射完成，共获取到{len(ids)}个中成药")
+    return ids, medicine_names
+
+
+# 获取药膳ID和名称映射
+def get_diet_id_map():
+    """获取药膳ID和名称映射"""
+    url = "https://www.zhiyuanzhongyi.com/tonicdiet"
+    content = fetch_webpage(url)
+    matches = extract_diet_info(content)
+    ids, medicine_names = process_common_medicine_and_prescription_and_diet_id_name(
+        matches
+    )
+    print(f"获取药膳ID和名称映射完成，共获取到{len(ids)}个药膳")
     return ids, medicine_names
 
 
@@ -290,12 +306,12 @@ def process_prescription_info(ids, medicine_names):
 
         # 提取经典方剂所有属性名称存成列表
         pattern_info_name = re.compile(
-            r'<div class="left_title" data-v-0bab2978>(.*?)</div>'
+            r'<div class="left_title" data-v-470d2d5c>(.*?)</div>'
         )
 
         # 提取属性对应的数据存成列表
         pattern_info_data = re.compile(
-            r'<div class="right_msg" data-v-0bab2978>(.*?)</div>'
+            r'<div class="right_msg" data-v-470d2d5c>(.*?)</div>'
         )
 
         matches_info_name = pattern_info_name.findall(response)
@@ -332,12 +348,12 @@ def process_chinese_medicine_info(ids, medicine_names):
 
         # 提取经典方剂所有属性名称存成列表
         pattern_info_name = re.compile(
-            r'<div class="left_title" data-v-0bab2978>(.*?)</div>'
+            r'<div class="left_title" data-v-a7c42b58>(.*?)</div>'
         )
 
         # 提取属性对应的数据存成列表
         pattern_info_data = re.compile(
-            r'<div class="right_msg" data-v-0bab2978>(.*?)</div>'
+            r'<div class="right_msg" data-v-a7c42b58>(.*?)</div>'
         )
 
         matches_info_name = pattern_info_name.findall(response)
@@ -370,10 +386,10 @@ def process_diet_info(ids, medicine_names):
         response = fetch_webpage(url)
         response = response.replace("\n", "")
         pattern_info_name = re.compile(
-            r'<div class="left_title" data-v-0bab2978>(.*?)</div>'
+            r'<div class="left_title" data-v-a7c42b58>(.*?)</div>'
         )
         pattern_info_data = re.compile(
-            r'<div class="right_msg" data-v-0bab2978>(.*?)</div>'
+            r'<div class="right_msg" data-v-a7c42b58>(.*?)</div>'
         )
         matches_info_name = pattern_info_name.findall(response)
         matches_info_data = pattern_info_data.findall(response)
