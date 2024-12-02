@@ -346,21 +346,32 @@ def process_chinese_medicine_info(ids, medicine_names):
         # 去除换行符
         response = response.replace("\n", "")
 
-        # 提取经典方剂所有属性名称存成列表
-        pattern_info_name = re.compile(
+        # 匹配中成药名字
+        pattern_medicine_name = re.compile(
+            r'<div class="title_msg" data-v-e8e5f53c>(.*?)</div>'
+        )
+        matches_medicine_name = pattern_medicine_name.findall(response)
+
+        if matches_medicine_name:
+            medicine_name = matches_medicine_name[0].strip()
+
+        # 提取中成药数据键
+        pattern_info_key = re.compile(
             r'<div class="left_title" data-v-a7c42b58>(.*?)</div>'
         )
 
-        # 提取属性对应的数据存成列表
+        # 提取中成药数据值
         pattern_info_data = re.compile(
             r'<div class="right_msg" data-v-a7c42b58>(.*?)</div>'
         )
 
-        matches_info_name = pattern_info_name.findall(response)
+        matches_info_key = pattern_info_key.findall(response)
         matches_info_data = pattern_info_data.findall(response)
-        if matches_info_name and matches_info_data:
+        if matches_info_key and matches_info_data:
+            # 把中成药名字添加到字典中
+            info_dict = {"药品名称": medicine_name}
             # 拼成字典
-            info_dict = dict(zip(matches_info_name, matches_info_data))
+            info_dict.update(dict(zip(matches_info_key, matches_info_data)))
             print(f"提取中成药信息：{medicine_name}，id：{id}完成")
             # 去掉HTML标签
             info_dict = remove_html_tags(info_dict)
@@ -381,23 +392,43 @@ def process_diet_info(ids, medicine_names):
     for index, (id, medicine_name) in enumerate(zip(ids, medicine_names), start=1):
         url = base_url + id
         print(
-            f"({index}/{total} ({(index/total)*100:.2f}%))开始处理药膳信息：{medicine_name}，id：{id}"
+            f"({index}/{total} ({(index/total)*100:.2f}%))开始处理药膳信息：{medicine_name} ，id：{id}"
         )
         response = fetch_webpage(url)
         response = response.replace("\n", "")
-        pattern_info_name = re.compile(
+
+        # 匹配药膳名字
+        pattern_medicine_name = re.compile(
+            r'<div class="title_msg" data-v-e8e5f53c>(.*?)</div>'
+        )
+
+        matches_medicine_name = pattern_medicine_name.findall(response)
+
+        if matches_medicine_name:
+            medicine_name = matches_medicine_name[0].strip()
+
+        # 数据键
+        pattern_info_key = re.compile(
             r'<div class="left_title" data-v-a7c42b58>(.*?)</div>'
         )
+
+        # 数据值
         pattern_info_data = re.compile(
             r'<div class="right_msg" data-v-a7c42b58>(.*?)</div>'
         )
-        matches_info_name = pattern_info_name.findall(response)
+        matches_info_key = pattern_info_key.findall(response)
         matches_info_data = pattern_info_data.findall(response)
-        if matches_info_name and matches_info_data:
-            info_dict = dict(zip(matches_info_name, matches_info_data))
+
+        if matches_info_key and matches_info_data:
+            # 把药膳名字添加到字典中
+            info_dict = {"药品名称": medicine_name}
+            # 拼成字典
+            info_dict.update(dict(zip(matches_info_key, matches_info_data)))
             print(f"提取药膳信息：{medicine_name}，id：{id}完成")
+            # 去掉HTML标签
             info_dict = remove_html_tags(info_dict)
             print(f"去除HTML标签完成")
+            # 去掉中括号的拼音
             info_dict = remove_pinyin(info_dict)
             print(f"去掉中括号的拼音完成")
             add_content_to_diet_excel(info_dict)
