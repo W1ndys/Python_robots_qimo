@@ -436,7 +436,7 @@ def process_diet_info(ids, medicine_names):
 
 def process_common_medicine():
     """处理常用中药"""
-    print("-" * 20 + "常用中药" + "-" * 20)
+    print("-" * 20 + "常用中药" + "-" * 20 + "by W1ndys")
     ids, medicine_names = get_common_medicine_id_map()
     print("-" * 50)
     process_common_medicine_info(ids, medicine_names)
@@ -445,7 +445,7 @@ def process_common_medicine():
 
 def process_prescription():
     """处理经典方剂"""
-    print("-" * 20 + "经典方剂" + "-" * 20)
+    print("-" * 20 + "经典方剂" + "-" * 20 + "by W1ndys")
     ids, medicine_names = get_prescription_id_map()
     print("-" * 50)
     process_prescription_info(ids, medicine_names)
@@ -454,7 +454,7 @@ def process_prescription():
 
 def process_chinese_medicine():
     """处理中成药"""
-    print("-" * 20 + "中成药" + "-" * 20)
+    print("-" * 20 + "中成药" + "-" * 20 + "by W1ndys")
     ids, medicine_names = get_chinese_medicine_id_map()
     print("-" * 50)
     process_chinese_medicine_info(ids, medicine_names)
@@ -463,7 +463,7 @@ def process_chinese_medicine():
 
 def process_diet():
     """处理药膳"""
-    print("-" * 20 + "药膳" + "-" * 20)
+    print("-" * 20 + "药膳" + "-" * 20 + "by W1ndys")
     ids, medicine_names = get_diet_id_map()
     print("-" * 50)
     process_diet_info(ids, medicine_names)
@@ -472,7 +472,7 @@ def process_diet():
 
 if __name__ == "__main__":
     print("-" * 50)
-    print("开始执行，Writed by W1ndys，https://github.com/W1ndys")
+    print("开始执行，Writed by W1ndys，https://github.com/W1ndys/Python_robots_qimo")
     print("-" * 50)
     init_excel()
     print("-" * 50)
